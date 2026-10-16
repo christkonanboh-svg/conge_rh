@@ -3,11 +3,12 @@ schema: spec-driven
 # Project context (optional)
 context: |
   Projet : Gestion des ressources humaines (congés) - devoir Angular + OpenSpec.
-  Stack : Angular (standalone, signals), Tailwind CSS, Supabase (Auth, Postgres, RLS), Chart.js, déploiement Vercel.
+  Stack : Angular (standalone, signals), Tailwind CSS, Chart.js, déploiement Vercel.
+  CONTRAINTE : aucune communication avec un backend. Toute la persistance (comptes, sessions, demandes, soldes, équipes) utilise le LocalStorage via un StorageService centralisé.
+  Authentification : inscription, connexion, déconnexion ; comptes stockés dans le LocalStorage ; mots de passe hachés (Web Crypto PBKDF2 + sel), jamais en clair ; session persistée ; données de démonstration (seed) au premier lancement.
   Acteurs : Employé (demande, solde, historique, calendrier d'équipe), Manager (valide/refuse les demandes de son équipe), RH/Admin (gère employés, équipes, types de congés, soldes, dashboard global).
-  Modules : authentification, rôles, CRUD, demande de congé, circuit de validation, solde de jours, calendrier d'équipe, recherche et filtres, tableau de bord.
+  Modules : authentification, rôles (guards), CRUD, demande de congé, circuit de validation, solde de jours, calendrier d'équipe, recherche et filtres, tableau de bord.
   Conventions : TypeScript strict, UI responsive, un commit par change OpenSpec, textes de l'interface en français.
-
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
 # Example:
