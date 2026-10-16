@@ -40,8 +40,10 @@ export const authGuard: CanActivateFn = () => {
 
 export const NAV_ITEMS: Array<{ label: string; route: string; roles: UserRole[] }> = [
   { label: 'Accueil', route: '/home', roles: ['employe', 'manager', 'rh'] },
+  { label: 'Demandes', route: '/requests', roles: ['employe', 'manager', 'rh'] },
   { label: 'Employés', route: '/employees', roles: ['rh'] },
   { label: 'Équipes', route: '/teams', roles: ['rh'] },
+  { label: 'Types de congé', route: '/leave-types', roles: ['rh'] },
 ];
 
 export const roleHomeRedirectGuard: CanActivateFn = () => {

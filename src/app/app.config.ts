@@ -3,6 +3,7 @@ import { provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
+import { LeaveSeedService } from './core/leave-requests/leave-seed.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,7 +14,11 @@ export const appConfig: ApplicationConfig = {
       multi: true,
       useFactory: () => {
         const auth = inject(AuthService);
-        return () => auth.seedDemoAccounts();
+        const leaveSeed = inject(LeaveSeedService);
+        return async () => {
+          await auth.seedDemoAccounts();
+          leaveSeed.seedDemoData();
+        };
       },
     },
   ],

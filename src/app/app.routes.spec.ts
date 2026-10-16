@@ -45,4 +45,22 @@ describe('app routes', () => {
     await router.navigateByUrl('/home');
     expect(router.url).toBe('/home');
   });
+
+  it('should allow any authenticated role to reach /requests', async () => {
+    await authService.register('emp@test.fr', 'password123', 'employe');
+    await router.navigateByUrl('/requests');
+    expect(router.url).toBe('/requests');
+  });
+
+  it('should redirect an Employé away from /leave-types to /home', async () => {
+    await authService.register('emp@test.fr', 'password123', 'employe');
+    await router.navigateByUrl('/leave-types');
+    expect(router.url).toBe(ROLE_HOME.employe);
+  });
+
+  it('should allow RH to reach /leave-types', async () => {
+    await authService.register('rh@test.fr', 'password123', 'rh');
+    await router.navigateByUrl('/leave-types');
+    expect(router.url).toBe('/leave-types');
+  });
 });

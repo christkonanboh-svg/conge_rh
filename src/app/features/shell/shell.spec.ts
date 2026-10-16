@@ -51,4 +51,19 @@ describe('ShellComponent', () => {
     expect(text).not.toContain('Équipes');
     expect(text).toContain('Accueil');
   });
+
+  it('should show the Requests entry for every role', async () => {
+    await setup('employe');
+    expect(element.textContent ?? '').toContain('Demandes');
+  });
+
+  it('should show the leave types entry only for RH', async () => {
+    await setup('rh');
+    expect(element.textContent ?? '').toContain('Types de congé');
+  });
+
+  it('should hide the leave types entry for Manager', async () => {
+    await setup('manager');
+    expect(element.textContent ?? '').not.toContain('Types de congé');
+  });
 });

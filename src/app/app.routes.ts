@@ -22,6 +22,16 @@ export const routes: Routes = [
         canActivate: [roleGuard('rh')],
         loadComponent: () => import('./features/teams/teams').then((m) => m.TeamsComponent),
       },
+      {
+        path: 'requests',
+        loadComponent: () =>
+          import('./features/leave-requests/leave-requests').then((m) => m.LeaveRequestsComponent),
+      },
+      {
+        path: 'leave-types',
+        canActivate: [roleGuard('rh')],
+        loadComponent: () => import('./features/leave-types/leave-types').then((m) => m.LeaveTypesComponent),
+      },
     ],
   },
 ];
