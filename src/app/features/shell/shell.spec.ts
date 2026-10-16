@@ -36,6 +36,16 @@ describe('ShellComponent', () => {
     expect(text).toContain('Équipes');
   });
 
+  it('should show the Calendrier entry for every role', async () => {
+    await setup('manager');
+    expect(element.textContent ?? '').toContain('Calendrier');
+  });
+
+  it('should show the Tableau de bord entry for every role', async () => {
+    await setup('employe');
+    expect(element.textContent ?? '').toContain('Tableau de bord');
+  });
+
   it('should hide Employees and Teams entries for Employé', async () => {
     await setup('employe');
     const text = element.textContent ?? '';

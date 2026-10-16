@@ -2,11 +2,13 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgForOf, NgIf } from '@angular/common';
 import { AuthService } from '../../core/auth/auth.service';
+import { StoredUser } from '../../core/auth/auth.models';
 import { UserRepository } from '../../core/users/user.repository';
 import { LeaveRequestService } from '../../core/leave-requests/leave-request.service';
 import { LeaveTypeService } from '../../core/leave-requests/leave-type.service';
 import { LeaveBalanceService } from '../../core/leave-balances/leave-balance.service';
-import { LeaveRequest, LEAVE_STATUS_LABELS, LeaveStatus } from '../../core/leave-requests/leave-request.models';
+import { LeaveRequest, LEAVE_STATUS_LABELS, LEAVE_STATUSES, LeaveStatus } from '../../core/leave-requests/leave-request.models';
+import { applyLeaveFilters, LeaveRequestFilters } from '../../core/leave-requests/leave-filters.util';
 
 @Component({
   selector: 'app-leave-requests',
@@ -53,6 +55,50 @@ import { LeaveRequest, LEAVE_STATUS_LABELS, LeaveStatus } from '../../core/leave
           </form>
         </div>
 
+        <div class="bg-white p-6 rounded shadow mb-6" [formGroup]="filterForm">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold">Recherche et filtres</h2>
+            <button type="button" (click)="resetFilters()" class="text-sm text-blue-600 hover:underline">
+              Réinitialiser
+            </button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Statut</label>
+              <select formControlName="status" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                <option value="">Tous les statuts</option>
+                <option *ngFor="let status of statuses" [value]="status">{{ statusLabels[status] }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Type</label>
+              <select formControlName="leaveTypeId" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                <option value="">Tous les types</option>
+                <option *ngFor="let type of leaveTypeService.types()" [value]="type.id">{{ type.name }}</option>
+              </select>
+            </div>
+            <div *ngIf="filterEmployees().length > 1">
+              <label class="block text-sm font-medium text-gray-700">Employé</label>
+              <select formControlName="employeeId" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                <option value="">Tous les employés</option>
+                <option *ngFor="let employee of filterEmployees()" [value]="employee.id">{{ fullName(employee) }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Du</label>
+              <input type="date" formControlName="startDate" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Au</label>
+              <input type="date" formControlName="endDate" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Recherche (nom, prénom)</label>
+              <input type="text" formControlName="search" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+            </div>
+          </div>
+        </div>
+
         <table class="w-full bg-white rounded shadow overflow-hidden mb-6">
           <thead class="bg-gray-50 text-left text-sm text-gray-600">
             <tr>
@@ -65,18 +111,14 @@ import { LeaveRequest, LEAVE_STATUS_LABELS, LeaveStatus } from '../../core/leave
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let request of visibleRequests()" class="border-t">
+            <tr *ngFor="let request of filteredRequests()" class="border-t">
               <td class="px-4 py-3">{{ employeeName(request.employeeId) }}</td>
               <td class="px-4 py-3">{{ typeName(request.leaveTypeId) }}</td>
               <td class="px-4 py-3">{{ request.startDate }} → {{ request.endDate }}</td>
               <td class="px-4 py-3">{{ request.workingDays }}</td>
               <td class="px-4 py-3">{{ statusLabels[request.status] }}</td>
               <td class="px-4 py-3 flex gap-2">
-                <button
-                  *ngIf="canDecide(request)"
-                  (click)="approve(request)"
-                  class="text-green-700 hover:underline"
-                >
+                <button *ngIf="canDecide(request)" (click)="approve(request)" class="text-green-700 hover:underline">
                   Approuver
                 </button>
                 <button *ngIf="canDecide(request)" (click)="refuse(request)" class="text-red-600 hover:underline">
@@ -87,7 +129,7 @@ import { LeaveRequest, LEAVE_STATUS_LABELS, LeaveStatus } from '../../core/leave
                 </button>
               </td>
             </tr>
-            <tr *ngIf="visibleRequests().length === 0">
+            <tr *ngIf="filteredRequests().length === 0">
               <td colspan="6" class="px-4 py-6 text-center text-gray-500">Aucune demande</td>
             </tr>
           </tbody>
@@ -132,6 +174,7 @@ export class LeaveRequestsComponent {
   private readonly fb = inject(FormBuilder);
 
   readonly statusLabels: Record<LeaveStatus, string> = LEAVE_STATUS_LABELS;
+  readonly statuses = LEAVE_STATUSES;
   readonly currentYear = new Date().getFullYear();
 
   readonly loading = signal(false);
@@ -145,9 +188,52 @@ export class LeaveRequestsComponent {
     reason: [''],
   });
 
+  readonly filterForm = this.fb.group({
+    status: [''],
+    leaveTypeId: [''],
+    startDate: [''],
+    endDate: [''],
+    employeeId: [''],
+    search: [''],
+  });
+
+  private readonly filterState = signal<LeaveRequestFilters>({});
+
+  constructor() {
+    this.filterForm.valueChanges.subscribe((value) => {
+      this.filterState.set({
+        status: (value.status as LeaveStatus | null) ?? '',
+        leaveTypeId: value.leaveTypeId ?? '',
+        startDate: value.startDate ?? '',
+        endDate: value.endDate ?? '',
+        employeeId: value.employeeId ?? '',
+        search: value.search ?? '',
+      });
+    });
+  }
+
   readonly visibleRequests = computed(() => {
     const user = this.auth.currentUser();
     return user ? this.leaveRequestService.visibleRequests(user) : [];
+  });
+
+  readonly filteredRequests = computed(() =>
+    applyLeaveFilters(this.visibleRequests(), this.filterState(), this.userRepository.list())
+  );
+
+  readonly filterEmployees = computed(() => {
+    const user = this.auth.currentUser();
+    if (!user) {
+      return [];
+    }
+    const all = this.userRepository.list();
+    if (user.role === 'rh') {
+      return all;
+    }
+    if (user.role === 'manager') {
+      return all.filter((candidate) => candidate.id === user.id || candidate.managerId === user.id);
+    }
+    return all.filter((candidate) => candidate.id === user.id);
   });
 
   readonly balanceRows = computed(() => {
@@ -177,8 +263,23 @@ export class LeaveRequestsComponent {
     if (!employee) {
       return id;
     }
+    return this.fullName(employee);
+  }
+
+  fullName(employee: StoredUser): string {
     const name = `${employee.firstName ?? ''} ${employee.lastName ?? ''}`.trim();
     return name || employee.email;
+  }
+
+  resetFilters(): void {
+    this.filterForm.reset({
+      status: '',
+      leaveTypeId: '',
+      startDate: '',
+      endDate: '',
+      employeeId: '',
+      search: '',
+    });
   }
 
   typeName(id: string): string {

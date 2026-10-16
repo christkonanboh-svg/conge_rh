@@ -28,6 +28,14 @@ export const routes: Routes = [
           import('./features/leave-requests/leave-requests').then((m) => m.LeaveRequestsComponent),
       },
       {
+        path: 'calendar',
+        loadComponent: () => import('./features/team-calendar/team-calendar').then((m) => m.TeamCalendarComponent),
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.DashboardComponent),
+      },
+      {
         path: 'leave-types',
         canActivate: [roleGuard('rh')],
         loadComponent: () => import('./features/leave-types/leave-types').then((m) => m.LeaveTypesComponent),

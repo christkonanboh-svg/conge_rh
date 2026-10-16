@@ -52,6 +52,23 @@ describe('app routes', () => {
     expect(router.url).toBe('/requests');
   });
 
+  it('should allow any authenticated role to reach /calendar', async () => {
+    await authService.register('emp@test.fr', 'password123', 'employe');
+    await router.navigateByUrl('/calendar');
+    expect(router.url).toBe('/calendar');
+  });
+
+  it('should redirect unauthenticated users away from /calendar to login', async () => {
+    await router.navigateByUrl('/calendar');
+    expect(router.url).toBe('/login');
+  });
+
+  it('should allow any authenticated role to reach /dashboard', async () => {
+    await authService.register('emp@test.fr', 'password123', 'employe');
+    await router.navigateByUrl('/dashboard');
+    expect(router.url).toBe('/dashboard');
+  });
+
   it('should redirect an Employé away from /leave-types to /home', async () => {
     await authService.register('emp@test.fr', 'password123', 'employe');
     await router.navigateByUrl('/leave-types');
