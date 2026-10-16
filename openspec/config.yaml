@@ -1,13 +1,12 @@
 schema: spec-driven
 
 # Project context (optional)
-# Add only constraints that should guide OpenSpec artifacts and workflows.
-# Include constraints an agent cannot infer by reading the code.
-# Keep general project documentation and discoverable codebase facts out.
-# Example:
-#   context: |
-#     Designs and tasks must cover Windows, macOS, and Linux
-#     Write all artifacts in Spanish
+context: |
+  Projet : Gestion des ressources humaines (congés) - devoir Angular + OpenSpec.
+  Stack : Angular (standalone, signals), Tailwind CSS, Supabase (Auth, Postgres, RLS), Chart.js, déploiement Vercel.
+  Acteurs : Employé (demande, solde, historique, calendrier d'équipe), Manager (valide/refuse les demandes de son équipe), RH/Admin (gère employés, équipes, types de congés, soldes, dashboard global).
+  Modules : authentification, rôles, CRUD, demande de congé, circuit de validation, solde de jours, calendrier d'équipe, recherche et filtres, tableau de bord.
+  Conventions : TypeScript strict, UI responsive, un commit par change OpenSpec, textes de l'interface en français.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
