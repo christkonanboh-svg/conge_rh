@@ -9,6 +9,7 @@ context: |
   Acteurs : Employé (demande, solde, historique, calendrier d'équipe), Manager (valide/refuse les demandes de son équipe), RH/Admin (gère employés, équipes, types de congés, soldes, dashboard global).
   Modules : authentification, rôles (guards), CRUD, demande de congé, circuit de validation, solde de jours, calendrier d'équipe, recherche et filtres, tableau de bord.
   Conventions : TypeScript strict, UI responsive, un commit par change OpenSpec, textes de l'interface en français.
+    Design : application moderne et soignée, jamais de page vide ou brute. Police Plus Jakarta Sans (Google Fonts). Palette : couleur primaire indigo (indigo-600), accent émeraude pour "approuvé", ambre pour "en attente", rouge pour "refusé", fonds slate-50, cartes blanches arrondies (rounded-2xl) avec ombre douce. Tokens définis une seule fois dans styles.css. Composants partagés réutilisés partout : bouton, carte, badge de statut, champ de formulaire, tableau, état vide, spinner, toast, modale de confirmation, carte KPI. Icônes en SVG inline. Responsive mobile d'abord, menu latéral repliable. Toute liste vide affiche un état vide avec une action.
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
 # Example:
