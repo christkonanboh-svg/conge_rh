@@ -16,6 +16,10 @@ export interface StoredUser {
   salt: string;
   iterations: number;
   createdAt: string;
+  firstName?: string;
+  lastName?: string;
+  teamId?: string | null;
+  managerId?: string | null;
 }
 
 export interface Session {

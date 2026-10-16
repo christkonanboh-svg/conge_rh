@@ -1,15 +1,17 @@
 import { computed, Injectable, signal } from '@angular/core';
 import { StorageService } from '../storage/storage.service';
+import { UserRepository } from '../users/user.repository';
 import { PasswordHasher } from './password-hasher';
 import { AuthResult, HashedPasswordInput, PublicUser, Session, StoredUser, UserRole } from './auth.models';
+import { Team, TEAMS_STORAGE_KEY } from '../employees/employee.models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly usersKey = 'users';
   private readonly sessionKey = 'session';
   private readonly demoSeededKey = 'demo_seeded';
 
   private readonly _currentUser = signal<PublicUser | null>(null);
+  private readonly repository: UserRepository;
 
   readonly currentUser = this._currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this._currentUser() !== null);
@@ -18,16 +20,12 @@ export class AuthService {
     private readonly storage: StorageService,
     private readonly hasher: PasswordHasher
   ) {
+    this.repository = new UserRepository(storage);
     this.restoreSession();
   }
 
   private get users(): StoredUser[] {
-    const users = this.storage.get<StoredUser[]>(this.usersKey);
-    return Array.isArray(users) ? users : [];
-  }
-
-  private setUsers(users: StoredUser[]): void {
-    this.storage.set(this.usersKey, users);
+    return this.repository.list();
   }
 
   private getSession(): Session | null {
@@ -48,7 +46,7 @@ export class AuthService {
       return { success: false, error: 'Données d\'inscription invalides' };
     }
 
-    const existing = this.users.find((u) => u.email === normalizedEmail);
+    const existing = this.repository.findByEmail(normalizedEmail);
     if (existing) {
       return { success: false, error: 'Cet identifiant existe déjà' };
     }
@@ -64,8 +62,7 @@ export class AuthService {
       createdAt: new Date().toISOString(),
     };
 
-    const users = [...this.users, newUser];
-    this.setUsers(users);
+    this.repository.add(newUser);
 
     const publicUser: PublicUser = { id: newUser.id, email: newUser.email, role: newUser.role };
     this.createSession(newUser.id);
@@ -76,7 +73,7 @@ export class AuthService {
 
   async login(email: string, password: string): Promise<AuthResult> {
     const normalizedEmail = email.trim().toLowerCase();
-    const user = this.users.find((u) => u.email === normalizedEmail);
+    const user = this.repository.findByEmail(normalizedEmail);
     if (!user) {
       return { success: false, error: 'Identifiants incorrects' };
     }
@@ -117,7 +114,7 @@ export class AuthService {
     if (!session) {
       return;
     }
-    const user = this.users.find((u) => u.id === session.userId);
+    const user = this.repository.findById(session.userId);
     if (!user) {
       this.setSession(null);
       return;
@@ -130,11 +127,18 @@ export class AuthService {
   }
 
   async seedDemoAccounts(): Promise<void> {
-    const users = this.users;
+    const users = this.repository.list();
     if (users.length > 0) {
       this.storage.set(this.demoSeededKey, true);
       return;
     }
+
+    const team: Team = {
+      id: crypto.randomUUID(),
+      name: 'Équipe démo',
+      createdAt: new Date().toISOString(),
+    };
+    this.storage.set(TEAMS_STORAGE_KEY, [team]);
 
     const demoAccounts = this.getDemoCredentials();
 
@@ -149,9 +153,26 @@ export class AuthService {
         salt: hashed.salt,
         iterations: hashed.iterations,
         createdAt: new Date().toISOString(),
+        firstName: account.role === 'rh' ? 'RH' : account.role === 'manager' ? 'Manager' : 'Employé',
+        lastName: 'Demo',
+        teamId: team.id,
+        managerId: null,
       });
     }
-    this.setUsers(seeded);
+
+    const byEmail = new Map(seeded.map((user) => [user.email, user]));
+    const managerFor: Record<UserRole, string> = {
+      employe: 'manager@demo.local',
+      manager: 'rh@demo.local',
+      rh: 'manager@demo.local',
+    };
+    for (const user of seeded) {
+      const managerEmail = managerFor[user.role];
+      const manager = byEmail.get(managerEmail);
+      user.managerId = manager ? manager.id : null;
+    }
+
+    this.repository.replaceAll(seeded);
     this.storage.set(this.demoSeededKey, true);
   }
 

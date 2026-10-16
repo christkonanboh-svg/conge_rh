@@ -61,6 +61,8 @@ describe('AuthService - seed', () => {
     users!.forEach((user) => {
       expect(user.passwordHash).not.toBe('demo1234');
       expect(user.salt).toBeTruthy();
+      expect(user.firstName).toBeDefined();
+      expect(user.managerId).toBeTruthy();
     });
   });
 });
