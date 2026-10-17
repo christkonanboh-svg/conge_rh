@@ -20,15 +20,17 @@ The system SHALL serve the public landing page at route `/` for unauthenticated 
 
 ### Requirement: Hero section
 
-The landing page SHALL include a hero section with a compelling headline, descriptive subtext, and two call-to-action buttons (primary "Commencer" or "Créer un compte", secondary "Se connecter").
+The landing page SHALL include a hero section with a compelling headline, descriptive subtext, and two call-to-action buttons: primary "Créer un compte" linking to `/register`, secondary "Se connecter" linking to `/login`.
 
 #### Scenario: Hero content present
 - **WHEN** viewing the landing page
-- **THEN** the hero section displays the headline, description, and primary/secondary CTAs
+- **THEN** the hero section displays the headline, description, primary "Créer un compte" button linking to `/register`, and secondary "Se connecter" button linking to `/login`
 
 #### Scenario: CTAs navigate to auth
-- **WHEN** clicking the primary or secondary CTA in the hero
-- **THEN** the user is navigated to the login or registration page as appropriate
+- **WHEN** clicking the "Créer un compte" CTA in the hero
+- **THEN** the user is navigated to `/register`
+- **AND** when clicking the "Se connecter" CTA in the hero
+- **THEN** the user is navigated to `/login`
 
 ### Requirement: Product mockup
 
@@ -54,6 +56,26 @@ The landing page SHALL include: features grid (6 cards: demande de congé, circu
 - **WHEN** viewing the landing page
 - **THEN** three audience sections (Employé, Manager, RH) are displayed with explanatory text
 
+#### Scenario: Statistics banner present
+- **WHEN** viewing the landing page
+- **THEN** a statistics banner displays at least four key figures (e.g., 3 rôles, 100 % en ligne, 0 papier, validation en un clic)
+
 #### Scenario: Final CTA and footer present
 - **WHEN** viewing the landing page
 - **THEN** a final call-to-action section and a footer with branding/text are present
+
+### Requirement: Responsive layout and navigation anchors
+
+The landing page SHALL be responsive (mobile: single column layout with compact navigation menu; desktop: multi-column layout) and SHALL include navigation anchor links to "Fonctionnalités", "Comment ça marche", and "Pour qui".
+
+#### Scenario: Desktop layout
+- **WHEN** viewed on a desktop viewport
+- **THEN** the landing page renders in a multi-column layout appropriate for wide screens
+
+#### Scenario: Mobile layout
+- **WHEN** viewed on a mobile viewport
+- **THEN** the landing page renders in a single column layout with a compact navigation menu
+
+#### Scenario: Navigation anchor links present
+- **WHEN** the public navigation is displayed
+- **THEN** it contains anchor links to "Fonctionnalités", "Comment ça marche", and "Pour qui"

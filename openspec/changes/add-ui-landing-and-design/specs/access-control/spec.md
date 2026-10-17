@@ -6,9 +6,13 @@ Update access control behavior so that authenticated users are redirected from r
 
 ## MODIFIED Requirements
 
-### Requirement: Root route behavior
+### Requirement: Redirection des utilisateurs non authentifiés
 
-The system SHALL redirect authenticated users from route `/` to `/app`, and SHALL present the public landing page to unauthenticated users accessing `/`.
+The system SHALL redirect to the login screen any unauthenticated user who attempts to access a protected route. Additionally, the root route SHALL behave such that unauthenticated users see the public landing page and authenticated users are redirected to `/app`.
+
+#### Scenario: Accès protégé sans session
+- **WHEN** un utilisateur sans session active tente d'accéder à une route protégée
+- **THEN** il est redirigé vers l'écran de connexion
 
 #### Scenario: Unauthenticated user views landing
 - **WHEN** an unauthenticated user navigates to `/`
